@@ -1,0 +1,11 @@
+# Environment variables
+.env
+
+# OS files
+.DS_Store
+
+# Deno cache
+.deno/
+
+# Node modules (if using npm)
+node_modules/

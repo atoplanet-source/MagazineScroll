@@ -1,0 +1,18 @@
+{
+  "thumbnailColor": "#000000",
+  "titlePage": {
+    "backgroundColor": "#000000",
+    "textColor": "#FFD60A"
+  },
+  "colorPalette": [
+    { "background": "#14213D", "text": "#FFFFFF" },
+    { "background": "#FFD60A", "text": "#000000" },
+    { "background": "#000000", "text": "#FFFFFF" },
+    { "background": "#C4B39A", "text": "#000000" },
+    { "background": "#E63946", "text": "#FFFFFF" }
+  ],
+  "imagePlaceholderColors": ["#FFD60A", "#E63946", "#C4B39A"],
+  "imageAspectRatios": [1.4, 0.75],
+  "imagePositionSeed": 2,
+  "imageColorOffset": 0
+}
