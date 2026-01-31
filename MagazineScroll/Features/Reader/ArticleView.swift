@@ -46,10 +46,14 @@ struct ArticleView: View {
             .safeAreaInsets.top ?? 47
     }
 
-    // Computed current page based on offset
+    // Computed current page based on offset - use floor during animation, round when settled
     private var currentPageIndex: Int {
         let pageHeight = screenSize.height
         let totalOffset = scrollOffset + dragOffset
+        // Use floor during animation to prevent rapid state changes
+        if isAnimating {
+            return max(0, min(pages.count - 1, Int(floor(-totalOffset / pageHeight + 0.5))))
+        }
         return max(0, min(pages.count - 1, Int(round(-totalOffset / pageHeight))))
     }
 
@@ -86,7 +90,7 @@ struct ArticleView: View {
                         .ignoresSafeArea()
                 } else {
                     // Page content - anchored to top, offset controls which page is visible
-                    VStack(spacing: 0) {
+                    LazyVStack(spacing: 0) {
                         ForEach(Array(pages.enumerated()), id: \.offset) { index, page in
                             PageView(page: page, screenSize: screenSize)
                                 .frame(width: screenSize.width, height: screenSize.height)
@@ -189,6 +193,9 @@ struct ArticleView: View {
             startReadTimer()
         }
         .onChange(of: currentPageIndex) { _, newPage in
+            // Skip tracking during animations to prevent freezes
+            guard !isAnimating else { return }
+
             // Record page view for engagement tracking
             EngagementTracker.shared.recordPageView(pageIndex: newPage)
 
