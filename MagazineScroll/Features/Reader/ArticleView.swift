@@ -21,6 +21,7 @@ struct ArticleView: View {
     // Time-based read tracking
     @State private var readTimer: Timer? = nil
     @State private var timeOnArticle: TimeInterval = 0
+    @State private var isAnimating: Bool = false
     private let readThresholdSeconds: TimeInterval = 30
 
     // Page cache to avoid recalculating pages - uses LRU cache with memory management
@@ -137,7 +138,6 @@ struct ArticleView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, topSafeAreaInset + 8) // Dynamic safe area + small padding
-                .animation(.easeInOut(duration: 0.2), value: currentPageIndex)
             }
             .overlay(alignment: .bottom) {
                 // Page counter - only shows after title page
@@ -151,7 +151,6 @@ struct ArticleView: View {
                             .padding(.trailing, 16)
                     }
                     .padding(.bottom, 40) // Safe area padding for bottom
-                    .animation(.easeInOut(duration: 0.2), value: currentPageIndex)
                 }
             }
         .overlay {
@@ -226,13 +225,13 @@ struct ArticleView: View {
     private func startReadTimer() {
         stopReadTimer()
         timeOnArticle = 0
-        // Use weak capture to prevent retain cycle
-        readTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak readTimer] _ in
-            // Access state through MainActor to avoid data race
-            Task { @MainActor in
-                self.timeOnArticle += 1
-                if self.timeOnArticle >= self.readThresholdSeconds && !self.hasTrackedRead {
-                    self.markAsRead()
+        readTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            DispatchQueue.main.async { [self] in
+                // Skip updates during scroll animations to prevent conflicts
+                guard !isAnimating else { return }
+                timeOnArticle += 1
+                if timeOnArticle >= readThresholdSeconds && !hasTrackedRead {
+                    markAsRead()
                 }
             }
         }
@@ -335,8 +334,13 @@ struct ArticleView: View {
         targetPage = max(0, min(pages.count - 1, targetPage))
 
         // Now animate from current position to target
+        isAnimating = true
         withAnimation(snapAnimation) {
             scrollOffset = -CGFloat(targetPage) * pageHeight
+        }
+        // Clear animation flag after animation completes
+        DispatchQueue.main.asyncAfter(deadline: .now() + snapAnimationResponse + 0.1) {
+            isAnimating = false
         }
     }
 
