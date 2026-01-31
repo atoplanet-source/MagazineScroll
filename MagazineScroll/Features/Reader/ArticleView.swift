@@ -90,7 +90,7 @@ struct ArticleView: View {
                         .ignoresSafeArea()
                 } else {
                     // Page content - anchored to top, offset controls which page is visible
-                    LazyVStack(spacing: 0) {
+                    VStack(spacing: 0) {
                         ForEach(Array(pages.enumerated()), id: \.offset) { index, page in
                             PageView(page: page, screenSize: screenSize)
                                 .frame(width: screenSize.width, height: screenSize.height)
