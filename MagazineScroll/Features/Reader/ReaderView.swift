@@ -189,11 +189,11 @@ struct ReaderView: View {
         // Pre-warm previous story (if not in random mode)
         if currentIndex > 0 && !navigationState.isRandomMode {
             let prevStory = navigationState.feedStories[currentIndex - 1]
-            if ArticleView.pageCache[prevStory.id] == nil {
+            if !PageCache.shared.contains(prevStory.id) {
                 Task.detached(priority: .utility) {
                     let pages = ArticleView.calculatePages(story: prevStory, screenSize: screenSize)
                     await MainActor.run {
-                        ArticleView.pageCache[prevStory.id] = pages
+                        PageCache.shared.set(prevStory.id, pages: pages)
                     }
                 }
             }
@@ -202,11 +202,11 @@ struct ReaderView: View {
         // Pre-warm next story (if not in random mode)
         if currentIndex < navigationState.feedStories.count - 1 && !navigationState.isRandomMode {
             let nextStory = navigationState.feedStories[currentIndex + 1]
-            if ArticleView.pageCache[nextStory.id] == nil {
+            if !PageCache.shared.contains(nextStory.id) {
                 Task.detached(priority: .utility) {
                     let pages = ArticleView.calculatePages(story: nextStory, screenSize: screenSize)
                     await MainActor.run {
-                        ArticleView.pageCache[nextStory.id] = pages
+                        PageCache.shared.set(nextStory.id, pages: pages)
                     }
                 }
             }
