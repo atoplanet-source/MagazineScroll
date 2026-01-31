@@ -445,22 +445,21 @@ struct SearchResultCard: View {
         .buttonStyle(.plain)
     }
     
-    private var highlightedTitle: some View {
+    private var highlightedTitle: Text {
         let title = story.title
         let query = searchQuery.lowercased()
-        
+
         if let range = title.lowercased().range(of: query) {
             let before = String(title[..<range.lowerBound])
             let match = String(title[range])
             let after = String(title[range.upperBound...])
-            
+
             return Text(before)
                 .font(.system(size: 17, weight: .bold))
                 .foregroundStyle(.black)
             + Text(match)
                 .font(.system(size: 17, weight: .bold))
-                .foregroundStyle(.black)
-                .background(Color(hex: "#FFF3CD"))
+                .foregroundStyle(Color(hex: "#2E5090"))
             + Text(after)
                 .font(.system(size: 17, weight: .bold))
                 .foregroundStyle(.black)
