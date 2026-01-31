@@ -57,7 +57,7 @@ struct ExplorationView: View {
                 ScrollView {
                     LazyVStack(spacing: 16) {
                         ForEach(feed) { story in
-                            ExplorationCard(story: story) {
+                            StoryCard(story: story, style: .exploration) {
                                 openStory(story)
                             }
                         }
@@ -72,19 +72,11 @@ struct ExplorationView: View {
     }
 
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Spacer()
-            Image(systemName: "sparkles")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text("You've explored everything!")
-                .font(.headline)
-                .foregroundStyle(.secondary)
-            Text("Check back later for new stories")
-                .font(.subheadline)
-                .foregroundStyle(.tertiary)
-            Spacer()
-        }
+        EmptyStateView(
+            icon: "sparkles",
+            title: "You've explored everything!",
+            message: "Check back later for new stories"
+        )
     }
 
     private func loadFeed() {
@@ -110,58 +102,6 @@ struct ExplorationView: View {
         navigationState.isExplorationMode = true
         navigationState.isRandomMode = true
         navigationState.openRandomStory()
-    }
-}
-
-// MARK: - Exploration Card
-
-struct ExplorationCard: View {
-    let story: Story
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Category pill
-                Text(story.category?.uppercased() ?? "")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(Color(hex: categoryColor))
-                    .clipShape(Capsule())
-
-                Text(story.title)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
-
-                if let tags = story.tags?.prefix(3), !tags.isEmpty {
-                    HStack(spacing: 6) {
-                        ForEach(Array(tags), id: \.self) { tag in
-                            Text(tag)
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.secondary.opacity(0.1))
-                                .clipShape(Capsule())
-                        }
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(20)
-            .background(Color(UIColor.systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(color: .black.opacity(0.05), radius: 8, y: 4)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var categoryColor: String {
-        CategoryColors.color(for: story.category)
     }
 }
 

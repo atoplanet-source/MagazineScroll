@@ -23,8 +23,8 @@ struct ArticleView: View {
     @State private var timeOnArticle: TimeInterval = 0
     private let readThresholdSeconds: TimeInterval = 30
 
-    // Page cache to avoid recalculating pages - accessible for pre-warming adjacent stories
-    static var pageCache: [UUID: [PageContent]] = [:]
+    // Page cache to avoid recalculating pages - uses LRU cache with memory management
+    private static let pageCache = PageCache.shared
 
     // Animation configuration - TikTok/Reels style snappy scrolling
     private let snapAnimationResponse: Double = 0.5   // Spring response time (lower = faster)
@@ -252,8 +252,8 @@ struct ArticleView: View {
     // MARK: - Async Page Loading with Cache
 
     private func loadPagesAsync() {
-        // Check cache first
-        if let cached = Self.pageCache[story.id] {
+        // Check cache first (uses LRU cache with memory management)
+        if let cached = Self.pageCache.get(story.id) {
             pages = cached
             EngagementTracker.shared.startReading(story: story, totalPages: pages.count)
             return
@@ -269,9 +269,9 @@ struct ArticleView: View {
         Task.detached(priority: .userInitiated) {
             let calculatedPages = Self.calculatePages(story: storyToCalculate, screenSize: size)
 
-            // Cache the result
+            // Cache the result (LRU cache handles eviction automatically)
             await MainActor.run {
-                Self.pageCache[storyToCalculate.id] = calculatedPages
+                Self.pageCache.set(storyToCalculate.id, pages: calculatedPages)
                 self.pages = calculatedPages
                 self.isCalculatingPages = false
                 EngagementTracker.shared.startReading(story: storyToCalculate, totalPages: calculatedPages.count)
