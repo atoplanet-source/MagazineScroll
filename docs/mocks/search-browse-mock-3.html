@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=375, height=812, initial-scale=1.0">
+    <title>Search/Browse UI - Option C: Category Deep Dive</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #1976D2;
+            width: 375px;
+            height: 812px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .status-bar {
+            height: 47px;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .status-icons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        /* Header */
+        .header {
+            padding: 16px;
+        }
+        
+        .back-button {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        .category-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 8px;
+        }
+        
+        .category-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 8px;
+        }
+        
+        .category-stats {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        /* Subcategory Pills */
+        .subcategory-scroll {
+            padding: 20px 16px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+        }
+        
+        .subcategory-pill {
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .subcategory-pill.active {
+            background: white;
+            color: #1976D2;
+        }
+        
+        /* Story List */
+        .story-list {
+            background: #F5F4F0;
+            border-radius: 24px 24px 0 0;
+            min-height: 500px;
+            padding: 24px 16px;
+        }
+        
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .list-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+        }
+        
+        .shuffle-button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: #1976D2;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        /* Story Row */
+        .story-row {
+            display: flex;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #E5E5E5;
+        }
+        
+        .story-number {
+            width: 28px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #1976D2;
+        }
+        
+        .story-info {
+            flex: 1;
+        }
+        
+        .story-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #000;
+            line-height: 1.3;
+            margin-bottom: 4px;
+        }
+        
+        .story-tags {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .story-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: #888;
+            background: #F0F0F0;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        
+        .story-arrow {
+            color: #CCC;
+            font-size: 14px;
+        }
+        
+        /* Read Badge */
+        .read-badge {
+            font-size: 10px;
+            font-weight: 700;
+            color: #2D6A4F;
+            background: #D4EDDA;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+        
+        /* Tab Bar */
+        .tab-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 83px;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 10px;
+            border-top: 1px solid #F0F0F0;
+        }
+        
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .tab-icon {
+            font-size: 24px;
+            color: #999;
+        }
+        
+        .tab-icon.active {
+            color: #2E5090;
+        }
+        
+        .tab-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #999;
+        }
+        
+        .tab-label.active {
+            color: #2E5090;
+        }
+    </style>
+</head>
+<body>
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons">
+            <span>📶</span>
+            <span>🔋</span>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <div class="header">
+        <div class="back-button">←</div>
+        <div class="category-label">CATEGORY</div>
+        <div class="category-title">Science</div>
+        <div class="category-stats">30 stories · 2 hours of reading</div>
+    </div>
+    
+    <!-- Subcategory Pills -->
+    <div class="subcategory-scroll">
+        <div class="subcategory-pill active">All</div>
+        <div class="subcategory-pill">Physics</div>
+        <div class="subcategory-pill">Biology</div>
+        <div class="subcategory-pill">Chemistry</div>
+        <div class="subcategory-pill">Astronomy</div>
+        <div class="subcategory-pill">Medicine</div>
+    </div>
+    
+    <!-- Story List -->
+    <div class="story-list">
+        <div class="list-header">
+            <span class="list-title">All Stories</span>
+            <div class="shuffle-button">
+                <span>🎲</span>
+                <span>Shuffle</span>
+            </div>
+        </div>
+        
+        <div class="story-row">
+            <span class="story-number">1</span>
+            <div class="story-info">
+                <div class="story-title">How Volcanoes Changed History</div>
+                <div class="story-tags">
+                    <span class="story-tag">geology</span>
+                    <span class="story-tag">climate</span>
+                </div>
+            </div>
+            <span class="story-arrow">›</span>
+        </div>
+        
+        <div class="story-row">
+            <span class="story-number">2</span>
+            <div class="story-info">
+                <div class="story-title">The Radium Girls' Fight for Justice<span class="read-badge">READ</span></div>
+                <div class="story-tags">
+                    <span class="story-tag">medicine</span>
+                    <span class="story-tag">labor</span>
+                </div>
+            </div>
+            <span class="story-arrow">›</span>
+        </div>
+        
+        <div class="story-row">
+            <span class="story-number">3</span>
+            <div class="story-info">
+                <div class="story-title">When Einstein Fled the Nazis</div>
+                <div class="story-tags">
+                    <span class="story-tag">physics</span>
+                    <span class="story-tag">wwii</span>
+                </div>
+            </div>
+            <span class="story-arrow">›</span>
+        </div>
+        
+        <div class="story-row">
+            <span class="story-number">4</span>
+            <div class="story-info">
+                <div class="story-title">The Moon Landing Conspiracy Debunked</div>
+                <div class="story-tags">
+                    <span class="story-tag">space</span>
+                    <span class="story-tag">cold war</span>
+                </div>
+            </div>
+            <span class="story-arrow">›</span>
+        </div>
+        
+        <div class="story-row">
+            <span class="story-number">5</span>
+            <div class="story-info">
+                <div class="story-title">Darwin's Secret Experiments</div>
+                <div class="story-tags">
+                    <span class="story-tag">biology</span>
+                    <span class="story-tag">evolution</span>
+                </div>
+            </div>
+            <span class="story-arrow">›</span>
+        </div>
+    </div>
+    
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <div class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label">Home</span>
+        </div>
+        <div class="tab-item">
+            <span class="tab-icon active">🔍</span>
+            <span class="tab-label active">Search</span>
+        </div>
+        <div class="tab-item">
+            <span class="tab-icon">👤</span>
+            <span class="tab-label">Profile</span>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=375, height=812, initial-scale=1.0">
+    <title>Search/Browse UI - Option B: Search Results</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #F5F4F0;
+            width: 375px;
+            height: 812px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .status-bar {
+            height: 47px;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .status-icons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        /* Active Search Bar */
+        .search-container {
+            padding: 0 16px 12px;
+        }
+        
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border: 2px solid #2E5090;
+        }
+        
+        .search-icon {
+            color: #2E5090;
+            font-size: 16px;
+        }
+        
+        .search-text {
+            color: #000;
+            font-size: 15px;
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .search-clear {
+            width: 20px;
+            height: 20px;
+            background: #E5E5E5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Filter Pills */
+        .filter-container {
+            padding: 0 16px 16px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+        }
+        
+        .filter-pill {
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            background: #E5E5E5;
+            color: #666;
+        }
+        
+        .filter-pill.active {
+            background: #2E5090;
+            color: white;
+        }
+        
+        /* Results Header */
+        .results-header {
+            padding: 0 16px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .results-count {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .sort-button {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2E5090;
+        }
+        
+        /* Search Results */
+        .results-list {
+            padding: 0 16px;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .result-content {
+            padding: 16px;
+        }
+        
+        .result-category {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .result-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #000;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+        
+        .result-highlight {
+            background: #FFF3CD;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+        
+        .result-preview {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .result-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #F0F0F0;
+        }
+        
+        .meta-item {
+            font-size: 12px;
+            font-weight: 600;
+            color: #999;
+        }
+        
+        /* Category Colors */
+        .cat-ancient { background: #FEE8DD; color: #C45B28; }
+        .cat-science { background: #E3F2FD; color: #1976D2; }
+        .cat-art { background: #FCE4EC; color: #B33951; }
+        
+        /* Tab Bar */
+        .tab-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 83px;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 10px;
+            border-top: 1px solid #F0F0F0;
+        }
+        
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .tab-icon {
+            font-size: 24px;
+            color: #999;
+        }
+        
+        .tab-icon.active {
+            color: #2E5090;
+        }
+        
+        .tab-label {
+            font-size: 10px;
+            font-weight: 600;
+            color: #999;
+        }
+        
+        .tab-label.active {
+            color: #2E5090;
+        }
+    </style>
+</head>
+<body>
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons">
+            <span>📶</span>
+            <span>🔋</span>
+        </div>
+    </div>
+    
+    <!-- Active Search Bar -->
+    <div class="search-container">
+        <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <span class="search-text">pompeii volcano</span>
+            <span class="search-clear">✕</span>
+        </div>
+    </div>
+    
+    <!-- Filter Pills -->
+    <div class="filter-container">
+        <div class="filter-pill active">All</div>
+        <div class="filter-pill">Ancient World</div>
+        <div class="filter-pill">Science</div>
+        <div class="filter-pill">20th Century</div>
+    </div>
+    
+    <!-- Results Header -->
+    <div class="results-header">
+        <span class="results-count">8 stories found</span>
+        <span class="sort-button">Sort ↓</span>
+    </div>
+    
+    <!-- Results -->
+    <div class="results-list">
+        <div class="result-card">
+            <div class="result-content">
+                <span class="result-category cat-ancient">ANCIENT WORLD</span>
+                <div class="result-title">The Last Day of <span class="result-highlight">Pompeii</span></div>
+                <div class="result-preview">When Mount Vesuvius erupted in 79 AD, it preserved an entire Roman city in volcanic ash...</div>
+                <div class="result-meta">
+                    <span class="meta-item">12 pages</span>
+                    <span class="meta-item">5 min read</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="result-card">
+            <div class="result-content">
+                <span class="result-category cat-science">SCIENCE</span>
+                <div class="result-title">How <span class="result-highlight">Volcanoes</span> Changed History</div>
+                <div class="result-preview">From Krakatoa to Eyjafjallajökull, volcanic eruptions have shaped civilizations...</div>
+                <div class="result-meta">
+                    <span class="meta-item">10 pages</span>
+                    <span class="meta-item">4 min read</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="result-card">
+            <div class="result-content">
+                <span class="result-category cat-art">ART</span>
+                <div class="result-title">Discovering <span class="result-highlight">Pompeii's</span> Hidden Frescoes</div>
+                <div class="result-preview">The vivid wall paintings of Pompeii reveal a sophisticated Roman artistic tradition...</div>
+                <div class="result-meta">
+                    <span class="meta-item">8 pages</span>
+                    <span class="meta-item">3 min read</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <div class="tab-item">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label">Home</span>
+        </div>
+        <div class="tab-item">
+            <span class="tab-icon active">🔍</span>
+            <span class="tab-label active">Search</span>
+        </div>
+        <div class="tab-item">
+            <span class="tab-icon">👤</span>
+            <span class="tab-label">Profile</span>
+        </div>
+    </div>
+</body>
+</html>

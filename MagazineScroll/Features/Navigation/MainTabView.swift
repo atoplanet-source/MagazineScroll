@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Main Tab View
 
-/// Root tab container with 3 tabs: Home, Explore, Profile
+/// Root tab container with 3 tabs: Home, Search, Profile
 struct MainTabView: View {
     @Bindable var navigationState: NavigationState
     @State private var selectedTab: TabSelection = .home
@@ -19,8 +19,8 @@ struct MainTabView: View {
                         categoryResetTrigger: homeCategoryResetTrigger
                     )
 
-                case .explore:
-                    ExplorationView(navigationState: navigationState)
+                case .search:
+                    SearchView(navigationState: navigationState)
 
                 case .profile:
                     ProfileView(navigationState: navigationState)

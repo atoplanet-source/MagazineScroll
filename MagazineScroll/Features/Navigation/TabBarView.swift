@@ -4,13 +4,13 @@ import SwiftUI
 
 enum TabSelection: Int, CaseIterable {
     case home = 0
-    case explore = 1
+    case search = 1
     case profile = 2
 
     var icon: String {
         switch self {
         case .home: return "house.fill"
-        case .explore: return "sparkles"
+        case .search: return "magnifyingglass"
         case .profile: return "person.fill"
         }
     }
@@ -18,7 +18,7 @@ enum TabSelection: Int, CaseIterable {
     var label: String {
         switch self {
         case .home: return "Home"
-        case .explore: return "Discover"
+        case .search: return "Search"
         case .profile: return "Profile"
         }
     }
