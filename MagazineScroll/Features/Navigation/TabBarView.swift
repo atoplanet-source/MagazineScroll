@@ -30,25 +30,32 @@ struct TabBarView: View {
     @Binding var selectedTab: TabSelection
     var onHomeTapped: (() -> Void)? = nil  // Callback when Home is tapped
 
-    private let tabBarHeight: CGFloat = 60
+    private let tabBarHeight: CGFloat = 56
+    private let bottomPadding: CGFloat = 28  // Extra padding above home indicator
 
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(TabSelection.allCases, id: \.rawValue) { tab in
-                TabBarButton(
-                    tab: tab,
-                    isSelected: selectedTab == tab,
-                    onTap: {
-                        // If tapping Home while already on Home, trigger callback
-                        if tab == .home && selectedTab == .home {
-                            onHomeTapped?()
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                ForEach(TabSelection.allCases, id: \.rawValue) { tab in
+                    TabBarButton(
+                        tab: tab,
+                        isSelected: selectedTab == tab,
+                        onTap: {
+                            // If tapping Home while already on Home, trigger callback
+                            if tab == .home && selectedTab == .home {
+                                onHomeTapped?()
+                            }
+                            selectedTab = tab
                         }
-                        selectedTab = tab
-                    }
-                )
+                    )
+                }
             }
+            .frame(height: tabBarHeight)
+            
+            // Bottom padding for home indicator area
+            Spacer()
+                .frame(height: bottomPadding)
         }
-        .frame(height: tabBarHeight)
         .background(
             Rectangle()
                 .fill(Color(hex: "#1A1A1A"))

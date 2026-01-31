@@ -110,16 +110,8 @@ struct HomeView: View {
     // MARK: - Body
     
     var body: some View {
-        VStack(spacing: 0) {
-            CategoryPillsView(
-                categories: cachedCategories,
-                selectedCategory: $selectedCategory
-            )
+        contentView
             .background(Color(hex: "#F5F4F0"))
-            
-            contentView
-        }
-        .background(Color(hex: "#F5F4F0"))
         .onAppear {
             initializeCategories()
             checkAndRefresh()
