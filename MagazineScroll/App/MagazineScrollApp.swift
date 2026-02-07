@@ -5,32 +5,21 @@ struct MagazineScrollApp: App {
     @State private var navigationState = NavigationState()
     @State private var savedStoriesManager = SavedStoriesManager()
     @State private var cloudKitManager = CloudKitManager.shared
-    @State private var showOnboarding = false
 
     var body: some Scene {
         WindowGroup {
-            ContentView(navigationState: navigationState, showOnboarding: $showOnboarding)
+            ContentView(navigationState: navigationState)
                 .environment(savedStoriesManager)
                 .environment(cloudKitManager)
                 .task {
                     // Sync from iCloud
                     await cloudKitManager.syncFromCloud()
 
-                    // Check if onboarding is needed
-                    if !cloudKitManager.hasCompletedOnboarding {
-                        showOnboarding = true
-                    }
-
                     // Load stories from Supabase (falls back to SampleData on error)
                     do {
                         navigationState.stories = try await APIClient.shared.fetchStories()
                     } catch {
                         navigationState.stories = SampleData.stories
-                    }
-                }
-                .onChange(of: cloudKitManager.hasCompletedOnboarding) { _, completed in
-                    if completed {
-                        showOnboarding = false
                     }
                 }
         }
@@ -41,7 +30,6 @@ struct MagazineScrollApp: App {
 
 struct ContentView: View {
     @Bindable var navigationState: NavigationState
-    @Binding var showOnboarding: Bool
 
     var body: some View {
         ZStack {
@@ -57,9 +45,6 @@ struct ContentView: View {
             }
         }
         .animation(.easeOut(duration: 0.3), value: navigationState.isShowingReader)
-        .fullScreenCover(isPresented: $showOnboarding) {
-            OnboardingView()
-        }
     }
 }
 
@@ -68,7 +53,7 @@ struct ContentView: View {
     state.stories = SampleData.stories
     state.feedStories = SampleData.stories
 
-    return ContentView(navigationState: state, showOnboarding: .constant(false))
+    return ContentView(navigationState: state)
         .environment(SavedStoriesManager())
         .environment(CloudKitManager.shared)
 }

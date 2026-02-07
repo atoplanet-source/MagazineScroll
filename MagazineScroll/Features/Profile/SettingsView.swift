@@ -5,7 +5,6 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var cloudKit = CloudKitManager.shared
-    @State private var showingOnboarding = false
 
     // Local editable state
     @State private var selectedCategories: Set<String> = []
@@ -34,9 +33,6 @@ struct SettingsView: View {
 
                     // Reading Preferences
                     preferencesSection
-
-                    // Retake Quiz Button
-                    retakeQuizButton
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
@@ -56,9 +52,6 @@ struct SettingsView: View {
             .onAppear {
                 loadPreferences()
             }
-        }
-        .fullScreenCover(isPresented: $showingOnboarding) {
-            OnboardingView()
         }
         .sheet(isPresented: $showingEraPicker) {
             PreferencePickerSheet(
@@ -177,28 +170,6 @@ struct SettingsView: View {
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
-    }
-
-    // MARK: - Retake Quiz Button
-
-    private var retakeQuizButton: some View {
-        Button {
-            showingOnboarding = true
-        } label: {
-            HStack {
-                Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 16, weight: .semibold))
-
-                Text("Retake Quiz")
-                    .font(.system(size: 16, weight: .semibold))
-            }
-            .foregroundStyle(Color(hex: "#2E5090"))
-            .frame(maxWidth: .infinity)
-            .frame(height: 50)
-            .background(Color(hex: "#2E5090").opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Helpers

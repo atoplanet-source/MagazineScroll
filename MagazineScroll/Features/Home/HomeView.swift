@@ -86,36 +86,6 @@ struct HomeView: View {
         Array(displayedStories.dropFirst(6).prefix(2))
     }
     
-    /// Stories that were started but not finished (for "Dive Back In" section)
-    private var inProgressStories: [Story] {
-        let engagements = cloudKitManager.readingStats.articleEngagements
-        let completedIDs = Set(cloudKitManager.readingStats.articlesRead)
-        
-        // Find stories with engagement but not completed
-        var inProgress: [(Story, ArticleEngagement)] = []
-        
-        for story in navigationState.stories {
-            if let engagement = engagements[story.id],
-               !completedIDs.contains(story.id),
-               engagement.pagesViewed > 0 {  // Must have viewed at least 1 page
-                inProgress.append((story, engagement))
-            }
-        }
-        
-        // Sort by most recently opened
-        inProgress.sort { $0.1.enterTime > $1.1.enterTime }
-        
-        return inProgress.prefix(5).map { $0.0 }
-    }
-    
-    /// Get progress for an in-progress story
-    private func progressForStory(_ storyId: UUID) -> Double {
-        guard let engagement = cloudKitManager.readingStats.articleEngagements[storyId] else {
-            return 0
-        }
-        return engagement.completionRate
-    }
-    
     private var topSelectedCategory: String {
         cloudKitManager.userPreferences.selectedCategories.first ?? "Art"
     }
@@ -155,11 +125,6 @@ struct HomeView: View {
             hasAppeared = false
             withAnimation(.easeOut(duration: 0.4).delay(0.1)) {
                 hasAppeared = true
-            }
-        }
-        .onChange(of: cloudKitManager.userPreferences.hasCompletedOnboarding) { _, completed in
-            if completed && !navigationState.stories.isEmpty {
-                generatePersonalizedFeed()
             }
         }
         .onChange(of: cloudKitManager.userPreferences.selectedCategories) { _, _ in
@@ -261,26 +226,9 @@ struct HomeView: View {
                         )
                     }
                     
-                    // 6. "Dive Back In" - stories started but not finished
-                    if !inProgressStories.isEmpty {
-                        HomeSectionHeader(title: "Dive Back In")
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(inProgressStories) { story in
-                                    InProgressCard(
-                                        story: story,
-                                        progress: progressForStory(story.id)
-                                    ) {
-                                        openStory(story)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 16)
-                        }
-                    }
                 }
                 
-                // 7. "More For You"
+                // 6. "More For You"
                 if !moreForYouStories.isEmpty {
                     HomeSectionHeader(title: "More For You")
                     VStack(spacing: 12) {
@@ -392,12 +340,6 @@ struct HomeView: View {
         }
         
         let preferences = cloudKitManager.userPreferences
-        
-        if !preferences.hasCompletedOnboarding && preferences.selectedCategories.isEmpty {
-            print("[HomeView] Skipping feed generation - onboarding in progress")
-            return
-        }
-        
         let stats = cloudKitManager.readingStats
         
         let feed = PersonalizationEngine.personalizedFeed(

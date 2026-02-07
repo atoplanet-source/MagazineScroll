@@ -25,13 +25,29 @@ struct ReaderView: View {
         UIScreen.main.bounds.width
     }
 
+    // Safe access to current story
+    private var currentStory: Story? {
+        guard currentIndex >= 0 && currentIndex < navigationState.feedStories.count else { return nil }
+        return navigationState.feedStories[currentIndex]
+    }
+    
+    private var previousStory: Story? {
+        guard currentIndex > 0 && currentIndex - 1 < navigationState.feedStories.count else { return nil }
+        return navigationState.feedStories[currentIndex - 1]
+    }
+    
+    private var nextStory: Story? {
+        guard currentIndex + 1 < navigationState.feedStories.count else { return nil }
+        return navigationState.feedStories[currentIndex + 1]
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
                 // Previous story (for peek) - hide in random mode since next will be random anyway
-                if currentIndex > 0 && !navigationState.isRandomMode {
+                if let prevStory = previousStory, !navigationState.isRandomMode {
                     ArticleView(
-                        story: navigationState.feedStories[currentIndex - 1],
+                        story: prevStory,
                         onClose: { navigationState.closeReader() },
                         disableVerticalScroll: isDraggingHorizontally,
                         isExplorationMode: navigationState.isExplorationMode
@@ -41,19 +57,21 @@ struct ReaderView: View {
                 }
 
                 // Current story
-                ArticleView(
-                    story: navigationState.feedStories[currentIndex],
-                    onClose: { navigationState.closeReader() },
-                    disableVerticalScroll: isDraggingHorizontally,
-                    isExplorationMode: navigationState.isExplorationMode
-                )
-                .frame(width: geometry.size.width, height: geometry.size.height)
-                .offset(x: dragOffset)
+                if let story = currentStory {
+                    ArticleView(
+                        story: story,
+                        onClose: { navigationState.closeReader() },
+                        disableVerticalScroll: isDraggingHorizontally,
+                        isExplorationMode: navigationState.isExplorationMode
+                    )
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .offset(x: dragOffset)
+                }
 
                 // Next story (for peek) - hide in random mode since next will be random anyway
-                if currentIndex < navigationState.feedStories.count - 1 && !navigationState.isRandomMode {
+                if let nextStory = nextStory, !navigationState.isRandomMode {
                     ArticleView(
-                        story: navigationState.feedStories[currentIndex + 1],
+                        story: nextStory,
                         onClose: { navigationState.closeReader() },
                         disableVerticalScroll: isDraggingHorizontally,
                         isExplorationMode: navigationState.isExplorationMode
@@ -65,6 +83,9 @@ struct ReaderView: View {
             .simultaneousGesture(
                 DragGesture(minimumDistance: 1)
                     .onChanged { value in
+                        // Safety: don't process gestures if no stories
+                        guard !navigationState.feedStories.isEmpty else { return }
+                        
                         let horizontal = abs(value.translation.width)
                         let vertical = abs(value.translation.height)
 
@@ -83,14 +104,16 @@ struct ReaderView: View {
                         guard gestureDirection == .horizontal else { return }
 
                         let translation = value.translation.width
+                        let storyCount = navigationState.feedStories.count
+                        let safeCurrentIndex = min(max(0, currentIndex), max(0, storyCount - 1))
 
                         // In random mode, no edge resistance - can always swipe to another random article
                         if navigationState.isRandomMode {
                             dragOffset = translation
-                        } else if currentIndex == 0 && translation > 0 {
+                        } else if safeCurrentIndex == 0 && translation > 0 {
                             // Add resistance at edges (non-random mode only)
                             dragOffset = translation * 0.3
-                        } else if currentIndex == navigationState.feedStories.count - 1 && translation < 0 {
+                        } else if safeCurrentIndex == storyCount - 1 && translation < 0 {
                             dragOffset = translation * 0.3
                         } else {
                             dragOffset = translation
@@ -107,28 +130,38 @@ struct ReaderView: View {
                             dragOffset = 0
                             return
                         }
+                        
+                        // Safety: don't process if no stories
+                        guard !navigationState.feedStories.isEmpty else {
+                            isDraggingHorizontally = false
+                            dragOffset = 0
+                            return
+                        }
 
                         let velocity = value.velocity.width
                         let translation = value.translation.width
                         let screenWidth = geometry.size.width
+                        let storyCount = navigationState.feedStories.count
 
-                        var targetIndex = currentIndex
+                        // Ensure currentIndex is valid
+                        let safeCurrentIndex = min(max(0, currentIndex), max(0, storyCount - 1))
+                        var targetIndex = safeCurrentIndex
 
                         if translation < -swipeThreshold || velocity < -velocityThreshold {
-                            if currentIndex < navigationState.feedStories.count - 1 {
-                                targetIndex = currentIndex + 1
+                            if safeCurrentIndex < storyCount - 1 {
+                                targetIndex = safeCurrentIndex + 1
                             }
                         } else if translation > swipeThreshold || velocity > velocityThreshold {
-                            if currentIndex > 0 {
-                                targetIndex = currentIndex - 1
+                            if safeCurrentIndex > 0 {
+                                targetIndex = safeCurrentIndex - 1
                             }
                         }
 
-                        if targetIndex != currentIndex {
-                            if navigationState.isRandomMode {
+                        if targetIndex != safeCurrentIndex {
+                            if navigationState.isRandomMode && storyCount > 0 {
                                 // Random mode: instant transition with crossfade, no slide
                                 // (No peek view is rendered, so slide would show black screen)
-                                let nextRandomIndex = Int.random(in: 0..<navigationState.feedStories.count)
+                                let nextRandomIndex = Int.random(in: 0..<storyCount)
                                 dragOffset = 0
                                 withAnimation(.easeInOut(duration: 0.25)) {
                                     currentIndex = nextRandomIndex
@@ -136,15 +169,16 @@ struct ReaderView: View {
                                 isDraggingHorizontally = false
                             } else {
                                 // Normal mode: slide animation with peek view
-                                let targetOffset = targetIndex > currentIndex ? -screenWidth : screenWidth
+                                let targetOffset = targetIndex > safeCurrentIndex ? -screenWidth : screenWidth
 
                                 withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
                                     dragOffset = targetOffset
                                 }
 
                                 // After animation, update index and reset offset (no visual change)
+                                let capturedTargetIndex = targetIndex
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                                    currentIndex = targetIndex
+                                    currentIndex = capturedTargetIndex
                                     dragOffset = 0
                                     isDraggingHorizontally = false
                                 }
@@ -166,7 +200,9 @@ struct ReaderView: View {
         .background(Color.black)
         .onAppear {
             if !hasInitialized {
-                currentIndex = navigationState.currentStoryIndex
+                // Ensure currentIndex is within bounds
+                let maxIndex = max(0, navigationState.feedStories.count - 1)
+                currentIndex = min(max(0, navigationState.currentStoryIndex), maxIndex)
                 hasInitialized = true
             }
             // Pre-warm adjacent story page caches for smooth swiping
@@ -187,8 +223,7 @@ struct ReaderView: View {
         let screenSize = UIScreen.main.bounds.size
 
         // Pre-warm previous story (if not in random mode)
-        if currentIndex > 0 && !navigationState.isRandomMode {
-            let prevStory = navigationState.feedStories[currentIndex - 1]
+        if let prevStory = previousStory, !navigationState.isRandomMode {
             if !PageCache.shared.contains(prevStory.id) {
                 Task.detached(priority: .utility) {
                     let pages = ArticleView.calculatePages(story: prevStory, screenSize: screenSize)
@@ -200,8 +235,7 @@ struct ReaderView: View {
         }
 
         // Pre-warm next story (if not in random mode)
-        if currentIndex < navigationState.feedStories.count - 1 && !navigationState.isRandomMode {
-            let nextStory = navigationState.feedStories[currentIndex + 1]
+        if let nextStory = nextStory, !navigationState.isRandomMode {
             if !PageCache.shared.contains(nextStory.id) {
                 Task.detached(priority: .utility) {
                     let pages = ArticleView.calculatePages(story: nextStory, screenSize: screenSize)
