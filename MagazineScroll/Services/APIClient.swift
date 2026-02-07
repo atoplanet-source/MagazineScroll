@@ -99,19 +99,26 @@ actor APIClient {
                 return nil
             }
             
-            // Fetch the stories by IDs in order
-            let stories: [StoryDTO] = try await supabase
-                .from("stories")
-                .select()
-                .in("id", values: feed.storyIds)
-                .execute()
-                .value
+            // Fetch the stories by IDs - need to fetch each one since .in() has UUID issues
+            var stories: [StoryDTO] = []
+            for storyId in feed.storyIds {
+                let storyResponse: [StoryDTO] = try await supabase
+                    .from("stories")
+                    .select()
+                    .eq("id", value: storyId)
+                    .limit(1)
+                    .execute()
+                    .value
+                if let story = storyResponse.first {
+                    stories.append(story)
+                }
+            }
             
             print("📰 Fetched \(stories.count) stories from IDs")
             
             // Reorder to match curated order
-            let storyMap = Dictionary(uniqueKeysWithValues: stories.map { ($0.id.uuidString, $0) })
-            let orderedStories = feed.storyIds.compactMap { storyMap[$0]?.toStory() }
+            let storyMap = Dictionary(uniqueKeysWithValues: stories.map { ($0.id.uuidString.lowercased(), $0) })
+            let orderedStories = feed.storyIds.compactMap { storyMap[$0.lowercased()]?.toStory() }
             
             print("✅ Loaded curated feed for \(dateString): \(orderedStories.count) stories")
             return orderedStories
