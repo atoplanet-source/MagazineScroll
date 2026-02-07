@@ -5,14 +5,22 @@ import SwiftUI
 /// Section header with optional "See all" button
 struct HomeSectionHeader: View {
     let title: String
+    var icon: String? = nil
     var showSeeAll: Bool = false
     var onSeeAll: (() -> Void)? = nil
     
     var body: some View {
         HStack {
-            Text(title)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(.black)
+            HStack(spacing: 6) {
+                if let icon = icon {
+                    Image(systemName: icon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Color(hex: "#2E5090"))
+                }
+                Text(title)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(.black)
+            }
             
             Spacer()
             

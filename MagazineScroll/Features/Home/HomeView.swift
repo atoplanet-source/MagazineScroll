@@ -21,6 +21,7 @@ struct HomeView: View {
     @State private var hasAppeared: Bool = false
     @State private var cachedCategories: [String] = []
     @State private var personalizedStories: [Story] = []
+    @State private var curatedStories: [Story] = []
     @State private var featuredStoryId: UUID?
     @State private var showingCategory: IdentifiableString? = nil
     @State private var selectedCategory: String? = nil
@@ -115,6 +116,7 @@ struct HomeView: View {
         .onAppear {
             initializeCategories()
             checkAndRefresh()
+            fetchCuratedStories()
             withAnimation(.easeOut(duration: 0.4).delay(0.1)) {
                 hasAppeared = true
             }
@@ -165,6 +167,20 @@ struct HomeView: View {
     private var storiesScrollView: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 0) {
+                // 0. Curated "Today's Reads" section (if available)
+                if !curatedStories.isEmpty && selectedCategory == nil {
+                    HomeSectionHeader(title: "Today's Reads", icon: "sparkles")
+                    VStack(spacing: 12) {
+                        ForEach(curatedStories.prefix(3)) { story in
+                            StoryCard(story: story, style: .article(height: 120)) {
+                                openCuratedStory(story)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+                }
+                
                 // 1. Carousel
                 if !carouselStories.isEmpty {
                     CarouselView(
@@ -262,6 +278,23 @@ struct HomeView: View {
         navigationState.feedStories = stories
         if let index = stories.firstIndex(where: { $0.id == story.id }) {
             navigationState.openStory(at: index)
+        }
+    }
+    
+    private func openCuratedStory(_ story: Story) {
+        navigationState.feedStories = curatedStories
+        if let index = curatedStories.firstIndex(where: { $0.id == story.id }) {
+            navigationState.openStory(at: index)
+        }
+    }
+    
+    private func fetchCuratedStories() {
+        Task {
+            if let curated = await APIClient.shared.fetchCuratedFeed() {
+                await MainActor.run {
+                    curatedStories = curated
+                }
+            }
         }
     }
     

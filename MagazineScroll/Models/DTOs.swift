@@ -70,6 +70,22 @@ struct DesignConfigDTO: Codable, Sendable {
     }
 }
 
+struct CuratedFeedDTO: Codable, Sendable {
+    let id: UUID
+    let date: String
+    let title: String?
+    let storyIds: [String]
+    let createdAt: String?
+    let updatedAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, date, title
+        case storyIds = "story_ids"
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+    }
+}
+
 struct StoryImageDTO: Codable, Sendable {
     let id: UUID
     let storyId: UUID

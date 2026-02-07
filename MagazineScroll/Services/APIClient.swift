@@ -67,6 +67,47 @@ actor APIClient {
         }
     }
 
+    // Fetch curated feed for a specific date
+    func fetchCuratedFeed(for date: Date = Date()) async -> [Story]? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dateString = formatter.string(from: date)
+        
+        do {
+            // First get the curated feed entry for the date
+            let response: [CuratedFeedDTO] = try await supabase
+                .from("curated_feeds")
+                .select()
+                .eq("date", value: dateString)
+                .limit(1)
+                .execute()
+                .value
+            
+            guard let feed = response.first, !feed.storyIds.isEmpty else {
+                print("📰 No curated feed for \(dateString)")
+                return nil
+            }
+            
+            // Fetch the stories by IDs in order
+            let stories: [StoryDTO] = try await supabase
+                .from("stories")
+                .select()
+                .in("id", values: feed.storyIds)
+                .execute()
+                .value
+            
+            // Reorder to match curated order
+            let storyMap = Dictionary(uniqueKeysWithValues: stories.map { ($0.id.uuidString, $0) })
+            let orderedStories = feed.storyIds.compactMap { storyMap[$0]?.toStory() }
+            
+            print("✅ Loaded curated feed for \(dateString): \(orderedStories.count) stories")
+            return orderedStories
+        } catch {
+            print("❌ Error fetching curated feed: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
     // Fetch available categories
     func fetchCategories() async -> [String] {
         do {
