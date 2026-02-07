@@ -58,8 +58,8 @@ struct TabBarView: View {
         }
         .background(
             Rectangle()
-                .fill(Color(hex: "#1A1A1A"))
-                .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: -4)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: -2)
         )
     }
 }
@@ -76,7 +76,7 @@ struct TabBarButton: View {
             VStack(spacing: 4) {
                 Image(systemName: tab.icon)
                     .font(.system(size: 22, weight: isSelected ? .semibold : .regular))
-                    .foregroundStyle(isSelected ? .white : .white.opacity(0.4))
+                    .foregroundStyle(isSelected ? .black : .black.opacity(0.35))
             }
             .frame(maxWidth: .infinity)
             .frame(height: 60)
@@ -88,7 +88,7 @@ struct TabBarButton: View {
 
 #Preview {
     ZStack {
-        Color(hex: "#1A1A1A").ignoresSafeArea()
+        Color(hex: "#F5F4F0").ignoresSafeArea()
 
         VStack {
             Spacer()

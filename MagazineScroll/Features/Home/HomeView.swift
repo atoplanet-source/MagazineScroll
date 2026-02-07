@@ -339,16 +339,44 @@ struct HomeView: View {
             return
         }
         
-        let preferences = cloudKitManager.userPreferences
         let stats = cloudKitManager.readingStats
+        let readIDs = Set(stats.articlesRead)
         
-        let feed = PersonalizationEngine.personalizedFeed(
-            stories: navigationState.stories,
-            preferences: preferences,
-            stats: stats,
-            limit: maxHomeArticles,
-            excludeRead: true
-        )
+        // Filter out already read articles
+        let unreadStories = navigationState.stories.filter { !readIDs.contains($0.id) }
+        
+        // Group by category
+        var storiesByCategory: [String: [Story]] = [:]
+        for story in unreadStories {
+            let cat = story.category ?? "Other"
+            storiesByCategory[cat, default: []].append(story)
+        }
+        
+        // Shuffle each category bucket
+        for (cat, stories) in storiesByCategory {
+            storiesByCategory[cat] = stories.shuffled()
+        }
+        
+        // Round-robin pull from each category for even distribution
+        var feed: [Story] = []
+        var categoryKeys = Array(storiesByCategory.keys).shuffled()
+        var indices: [String: Int] = Dictionary(uniqueKeysWithValues: categoryKeys.map { ($0, 0) })
+        
+        while feed.count < maxHomeArticles {
+            var addedThisRound = false
+            for cat in categoryKeys {
+                guard feed.count < maxHomeArticles else { break }
+                if let idx = indices[cat], let stories = storiesByCategory[cat], idx < stories.count {
+                    feed.append(stories[idx])
+                    indices[cat] = idx + 1
+                    addedThisRound = true
+                }
+            }
+            // If no stories added, we've exhausted all categories
+            if !addedThisRound { break }
+            // Re-shuffle category order each round for more variety
+            categoryKeys.shuffle()
+        }
         
         personalizedStories = feed
         featuredStoryId = feed.first?.id
