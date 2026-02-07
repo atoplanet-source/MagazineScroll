@@ -290,10 +290,15 @@ struct HomeView: View {
     
     private func fetchCuratedStories() {
         Task {
+            print("🔍 Fetching curated stories...")
             if let curated = await APIClient.shared.fetchCuratedFeed() {
+                print("🔍 Got \(curated.count) curated stories")
                 await MainActor.run {
                     curatedStories = curated
+                    print("🔍 Set curatedStories, count: \(curatedStories.count)")
                 }
+            } else {
+                print("🔍 No curated feed returned (nil)")
             }
         }
     }

@@ -73,6 +73,8 @@ actor APIClient {
         formatter.dateFormat = "yyyy-MM-dd"
         let dateString = formatter.string(from: date)
         
+        print("📰 Fetching curated feed for date: \(dateString)")
+        
         do {
             // First get the curated feed entry for the date
             let response: [CuratedFeedDTO] = try await supabase
@@ -83,8 +85,17 @@ actor APIClient {
                 .execute()
                 .value
             
-            guard let feed = response.first, !feed.storyIds.isEmpty else {
-                print("📰 No curated feed for \(dateString)")
+            print("📰 Curated feeds response count: \(response.count)")
+            
+            guard let feed = response.first else {
+                print("📰 No curated feed entry for \(dateString)")
+                return nil
+            }
+            
+            print("📰 Found feed with \(feed.storyIds.count) story IDs: \(feed.storyIds)")
+            
+            guard !feed.storyIds.isEmpty else {
+                print("📰 Feed has no story IDs")
                 return nil
             }
             
@@ -96,6 +107,8 @@ actor APIClient {
                 .execute()
                 .value
             
+            print("📰 Fetched \(stories.count) stories from IDs")
+            
             // Reorder to match curated order
             let storyMap = Dictionary(uniqueKeysWithValues: stories.map { ($0.id.uuidString, $0) })
             let orderedStories = feed.storyIds.compactMap { storyMap[$0]?.toStory() }
@@ -103,7 +116,8 @@ actor APIClient {
             print("✅ Loaded curated feed for \(dateString): \(orderedStories.count) stories")
             return orderedStories
         } catch {
-            print("❌ Error fetching curated feed: \(error.localizedDescription)")
+            print("❌ Error fetching curated feed: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
             return nil
         }
     }
